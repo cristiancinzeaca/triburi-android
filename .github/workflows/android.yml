@@ -1,0 +1,40 @@
+name: Build Android (AAB + APK)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      KS_B64: ${{ secrets.KEYSTORE_BASE64 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci || npm install
+      - run: npx cap sync android
+      - name: Decode upload keystore
+        if: env.KS_B64 != ''
+        run: echo "$KS_B64" | base64 -d > $RUNNER_TEMP/upload.jks && echo "TRIBUS_KEYSTORE=$RUNNER_TEMP/upload.jks" >> $GITHUB_ENV
+      - name: Build release AAB and APK
+        working-directory: android
+        env:
+          TRIBUS_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          TRIBUS_KEY_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          TRIBUS_KEY_ALIAS: tribus
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease assembleRelease assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tribus-android
+          path: |
+            android/app/build/outputs/bundle/release/*.aab
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/apk/debug/*.apk

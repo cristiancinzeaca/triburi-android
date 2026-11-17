@@ -1,0 +1,1 @@
+{"name":"tribus","version":"1.0.0","private":true,"scripts":{"sync":"npx cap sync android"},"dependencies":{"@capacitor/android":"^8.6.2","@capacitor/cli":"^8.6.2","@capacitor/core":"^8.6.2","@capacitor/splash-screen":"^8.0.2","@capacitor/status-bar":"^8.0.4"}}
